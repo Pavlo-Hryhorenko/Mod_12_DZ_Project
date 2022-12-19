@@ -28,7 +28,8 @@ class AddressBook(UserDict):
 
 class Field:
     def __init__(self, value=None):
-        self._value = value
+        self._value = None
+        self.value = value
 
     @property
     def value(self):
@@ -57,7 +58,8 @@ class Birthday(Field):
     @Field.value.setter
     def value(self, value):
         try:
-            super(Birthday, self.__class__).value.fset(self, datetime.datetime.strptime(value, '%d-%m-%Y'))
+            self._value = datetime.datetime.strptime(value, '%d-%m-%Y')
+            # super(Birthday, self.__class__).value.fset(self, datetime.datetime.strptime(value, '%d-%m-%Y'))
         except ValueError:
             print("Incorrect data format, should be DD-MM-YYYY")
 
@@ -84,19 +86,23 @@ class Phone(Field):
 
     @Field.value.setter
     def value(self, value):
-        super(Phone, self.__class__).value.fset(self, Phone.check_phone(value))
+        self._value = Phone.check_phone(value)
+        # super(Phone, self.__class__).value.fset(self, Phone.check_phone(value))
 
 
 class Record:
 
     def __init__(self, name, phone=None, birthday=None):
         self.name = Name(name)
-        self.birthday = Birthday()
+        self.birthday = None
+        # self.birthday = Birthday()
+        # if phone:
+        #     self.phones = [Phone(phone)]
+        # else:
+        #     self.phones = []
+        phones = []
         if phone:
-            self.phones = [Phone(phone)]
-        else:
-            self.phones = []
-
+            self.add_phone(phone)
         if birthday:
             self.birthday.value = birthday
 
@@ -118,7 +124,7 @@ class Record:
 
 if os.path.isfile('dump.pickle'):
     with open('dump.pickle', 'rb') as file:
-        RECORDS = pickle.load(file)
+        address_book = pickle.load(file)
 else:
     address_book = AddressBook()
 
@@ -181,10 +187,11 @@ def delete_phone(*args):
     if len(command_list) != 2:
         print("Give me name and phone please")
         return
-
-    contact_name = command_list[0]
-    contact_phone = command_list[1]
-    address_book[contact_name].delete_phone(contact_phone)
+    contact_name, contact_phone, *_ = command_list
+    address_book[address_book.get_key_by_name(contact_name)].delete_phone(contact_phone)
+    # contact_name = command_list[0]
+    # contact_phone = command_list[1]
+    # address_book[contact_name].delete_phone(contact_phone)
 
 
 @error_handler
